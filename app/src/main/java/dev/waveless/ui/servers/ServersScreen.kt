@@ -76,12 +76,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.waveless.R
+import dev.waveless.data.FlagName
 import dev.waveless.data.Profile
 import dev.waveless.data.ProfileStore
 import dev.waveless.data.ShareLinks
 import dev.waveless.data.Subscription
 import dev.waveless.ui.Delay
-import dev.waveless.ui.components.ProtocolBadge
+import dev.waveless.ui.components.ServerBadge
 import dev.waveless.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
@@ -290,6 +291,7 @@ private fun ServerItem(
     modifier: Modifier = Modifier,
 ) {
     var menu by remember { mutableStateOf(false) }
+    val name = remember(profile.name) { FlagName.of(profile.name) }
     SegmentedListItem(
         selected = selected,
         onClick = onSelect,
@@ -302,15 +304,16 @@ private fun ServerItem(
         ),
         modifier = modifier,
         leadingContent = {
-            ProtocolBadge(
+            ServerBadge(
                 profile.protocol,
+                name.flag,
                 container = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiaryContainer,
                 content = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onTertiaryContainer,
             )
         },
         supportingContent = {
             Text(
-                listOf(profile.network, profile.security.takeIf { it != "none" }, "${profile.address}:${profile.port}")
+                listOf(profile.protocol.label, profile.network, profile.security.takeIf { it != "none" }, "${profile.address}:${profile.port}")
                     .filterNotNull().joinToString(" · "),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -339,7 +342,7 @@ private fun ServerItem(
             }
         },
     ) {
-        Text(profile.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(name.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

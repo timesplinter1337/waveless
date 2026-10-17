@@ -3,7 +3,10 @@ package dev.waveless.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -13,15 +16,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.waveless.data.Protocol
 
-/** Each protocol gets its own Material shape so servers are recognisable at a glance. */
+/**
+ * Server avatar: the protocol picks the Material shape, the content is the country flag
+ * leading the server name, or an outlined globe when the name has none.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ProtocolBadge(
+fun ServerBadge(
     protocol: Protocol,
+    flag: String?,
     modifier: Modifier = Modifier,
     size: Dp = 44.dp,
     container: Color = MaterialTheme.colorScheme.tertiaryContainer,
@@ -37,10 +46,16 @@ fun ProtocolBadge(
         modifier.size(size).clip(polygon.toShape()).background(container),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            protocol.label.take(2).uppercase(),
-            style = MaterialTheme.typography.labelLarge,
-            color = content,
-        )
+        if (flag != null) {
+            val fontSize = with(LocalDensity.current) { (size * 0.5f).toSp() }
+            Text(flag, style = TextStyle(fontSize = fontSize, lineHeight = fontSize))
+        } else {
+            Icon(
+                Icons.Outlined.Language,
+                contentDescription = null,
+                tint = content,
+                modifier = Modifier.size(size * 0.5f),
+            )
+        }
     }
 }

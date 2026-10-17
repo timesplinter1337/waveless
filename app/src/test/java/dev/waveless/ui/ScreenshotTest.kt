@@ -37,7 +37,7 @@ class ScreenshotTest {
     private val profiles: List<Profile> = listOf(
         "vless://u@de1.example.net:443?type=tcp&security=reality&pbk=k&sni=www.microsoft.com#🇩🇪 Frankfurt",
         "vless://u@nl1.example.net:443?type=xhttp&security=tls&sni=nl1.example.net#🇳🇱 Amsterdam",
-        "trojan://p@fi1.example.net:443?type=grpc&serviceName=s#🇫🇮 Helsinki",
+        "trojan://p@fi1.example.net:443?type=grpc&serviceName=s#Helsinki 🇫🇮",
         "ss://YWVzLTI1Ni1nY206cHc@us1.example.net:8388#🇺🇸 New York",
     ).map { ShareLinks.parse(it, subscriptionId = "sub")!! } +
         ShareLinks.parse("vmess://eyJwcyI6Ik15IFZQUyIsImFkZCI6IjEwLjAuMC4xIiwicG9ydCI6IjQ0MyIsImlkIjoidSIsIm5ldCI6IndzIn0=")!!

@@ -46,11 +46,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.waveless.R
+import dev.waveless.data.FlagName
 import dev.waveless.data.Profile
 import dev.waveless.data.RoutingMode
 import dev.waveless.service.Traffic
 import dev.waveless.service.VpnStatus
-import dev.waveless.ui.components.ProtocolBadge
+import dev.waveless.ui.components.ServerBadge
 import dev.waveless.ui.formatBytes
 import dev.waveless.ui.formatDuration
 import dev.waveless.ui.formatRate
@@ -212,10 +213,11 @@ private fun ProfileCard(profile: Profile?, onClick: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             if (profile != null) {
-                ProtocolBadge(profile.protocol)
+                val name = remember(profile.name) { FlagName.of(profile.name) }
+                ServerBadge(profile.protocol, name.flag)
                 Column(Modifier.weight(1f)) {
                     Text(
-                        profile.name,
+                        name.label,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
