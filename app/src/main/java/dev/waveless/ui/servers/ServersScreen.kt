@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -27,10 +28,12 @@ import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.RssFeed
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Dns
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
 import androidx.compose.material3.FloatingToolbarExitDirection
@@ -126,7 +129,11 @@ fun ServersScreen(
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             if (store.profiles.isEmpty()) {
-                EmptyState(Modifier.align(Alignment.Center))
+                EmptyState(
+                    onAddSubscription = { showSubscriptionDialog = true },
+                    onPaste = pasteFromClipboard,
+                    modifier = Modifier.align(Alignment.Center),
+                )
             } else {
                 ServerList(
                     store = store,
@@ -362,7 +369,7 @@ private fun DelayLabel(delay: Delay?) {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun EmptyState(modifier: Modifier = Modifier) {
+private fun EmptyState(onAddSubscription: () -> Unit, onPaste: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier.widthIn(max = 360.dp).padding(Spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -389,5 +396,16 @@ private fun EmptyState(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+        Spacer(Modifier.height(Spacing.xs))
+        Button(onClick = onAddSubscription, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Rounded.RssFeed, contentDescription = null)
+            Spacer(Modifier.width(Spacing.xs))
+            Text(stringResource(R.string.action_add_subscription))
+        }
+        FilledTonalButton(onClick = onPaste, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Rounded.ContentPaste, contentDescription = null)
+            Spacer(Modifier.width(Spacing.xs))
+            Text(stringResource(R.string.action_paste))
+        }
     }
 }

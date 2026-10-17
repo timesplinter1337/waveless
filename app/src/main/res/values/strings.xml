@@ -46,7 +46,7 @@
     <string name="delay_ms">%d ms</string>
     <string name="delay_failed">timeout</string>
     <string name="empty_title">No servers yet</string>
-    <string name="empty_body">Copy a vless://, vmess://, trojan:// or ss:// link and tap the paste button, or add a subscription.</string>
+    <string name="empty_body">Add a subscription URL, or copy vless://, vmess://, trojan:// or ss:// links (or a subscription URL) and paste them.</string>
     <string name="field_name">Name</string>
     <string name="field_url">Subscription URL</string>
 

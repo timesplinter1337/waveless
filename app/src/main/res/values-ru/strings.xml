@@ -47,7 +47,7 @@
     <string name="delay_ms">%d мс</string>
     <string name="delay_failed">таймаут</string>
     <string name="empty_title">Серверов пока нет</string>
-    <string name="empty_body">Скопируйте ссылку vless://, vmess://, trojan:// или ss:// и нажмите кнопку вставки, либо добавьте подписку.</string>
+    <string name="empty_body">Добавьте ссылку на подписку или скопируйте ключи vless://, vmess://, trojan://, ss:// (или ссылку подписки) и вставьте их.</string>
     <string name="field_name">Название</string>
     <string name="field_url">Ссылка на подписку</string>
 

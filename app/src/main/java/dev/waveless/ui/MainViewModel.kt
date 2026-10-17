@@ -11,6 +11,7 @@ import dev.waveless.data.AppSettings
 import dev.waveless.data.Profile
 import dev.waveless.data.ProfileStore
 import dev.waveless.data.RoutingMode
+import dev.waveless.data.ShareLinks
 import dev.waveless.service.VpnState
 import dev.waveless.service.VpnStatus
 import dev.waveless.service.WavelessVpnService
@@ -68,14 +69,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun delete(profile: Profile) = viewModelScope.launch { profiles.delete(profile.id) }
 
-    fun importText(text: String?) = viewModelScope.launch {
-        val added = if (text.isNullOrBlank()) 0 else profiles.importText(text)
-        message(
-            if (added > 0) str(R.string.msg_imported, added) else str(R.string.msg_nothing_to_import)
-        )
+    /** Imports share links, or adds subscriptions when [text] is just subscription URL(s). */
+    fun importText(text: String?) {
+        val urls = ShareLinks.subscriptionUrls(text.orEmpty())
+        if (urls.isNotEmpty()) {
+            launchBusy { urls.forEach { subscribe(name = "", url = it) } }
+            return
+        }
+        viewModelScope.launch {
+            val added = if (text.isNullOrBlank()) 0 else profiles.importText(text)
+            message(
+                if (added > 0) str(R.string.msg_imported, added) else str(R.string.msg_nothing_to_import)
+            )
+        }
     }
 
-    fun addSubscription(name: String, url: String) = launchBusy {
+    fun addSubscription(name: String, url: String) = launchBusy { subscribe(name, url) }
+
+    private suspend fun subscribe(name: String, url: String) {
         profiles.addSubscription(name, url)
             .onSuccess { message(str(R.string.msg_subscription_added, it)) }
             .onFailure { message(str(R.string.msg_subscription_failed, it.message.orEmpty())) }

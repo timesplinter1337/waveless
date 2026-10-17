@@ -93,6 +93,19 @@ class ShareLinksTest {
     }
 
     @Test
+    fun `recognises pasted subscription urls`() {
+        assertEquals(
+            listOf("https://sub.example.com/api/sub/abc", "http://1.2.3.4:2096/sub/x"),
+            ShareLinks.subscriptionUrls(" https://sub.example.com/api/sub/abc \n\nhttp://1.2.3.4:2096/sub/x\n"),
+        )
+        // Share links, mixed content and prose are not subscriptions.
+        assertEquals(emptyList<String>(), ShareLinks.subscriptionUrls("vless://u@h:443#x"))
+        assertEquals(emptyList<String>(), ShareLinks.subscriptionUrls("https://a.example/sub\nvless://u@h:443#x"))
+        assertEquals(emptyList<String>(), ShareLinks.subscriptionUrls("see https://a.example/sub"))
+        assertEquals(emptyList<String>(), ShareLinks.subscriptionUrls("   "))
+    }
+
+    @Test
     fun `rejects unsupported links`() {
         assertNull(ShareLinks.parse("hysteria2://x@h:1"))
         assertNull(ShareLinks.parse("vless://missing-port@host"))

@@ -25,6 +25,19 @@ object ShareLinks {
         return parseLines(decoded, subscriptionId)
     }
 
+    /**
+     * Returns the subscription URLs in [text] when it consists only of http(s) links,
+     * so a pasted subscription link is not mistaken for a broken server list.
+     */
+    fun subscriptionUrls(text: String): List<String> {
+        val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+        val isUrl = { line: String ->
+            (line.startsWith("https://", ignoreCase = true) || line.startsWith("http://", ignoreCase = true)) &&
+                line.none { it.isWhitespace() }
+        }
+        return if (lines.isNotEmpty() && lines.all(isUrl)) lines else emptyList()
+    }
+
     fun parse(link: String, subscriptionId: String? = null): Profile? = runCatching {
         val trimmed = link.trim()
         when (trimmed.substringBefore("://").lowercase()) {
