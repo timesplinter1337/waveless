@@ -1,0 +1,42 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/xray-check/go.mod
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-37.0 build-tools;37.0.0'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Fetch xray-core (libv2ray.aar)
+        run: scripts/fetch-libxray.sh
+
+      - name: Unit tests + xray-core config validation
+        run: scripts/validate-configs.sh
+
+      - name: Assemble APKs
+        run: ./gradlew :app:assembleRelease --console=plain
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: waveless-apks
+          path: app/build/outputs/apk/release/*.apk
