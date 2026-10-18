@@ -33,8 +33,10 @@ fun ServerBadge(
     flag: String?,
     modifier: Modifier = Modifier,
     size: Dp = 44.dp,
-    container: Color = MaterialTheme.colorScheme.tertiaryContainer,
-    content: Color = MaterialTheme.colorScheme.onTertiaryContainer,
+    // secondaryContainer stays a dark tone in dark themes; tertiaryContainer does not in
+    // newer (dynamic) schemes, which made the flag sit on a bright pastel blob.
+    container: Color = MaterialTheme.colorScheme.secondaryContainer,
+    content: Color = MaterialTheme.colorScheme.onSecondaryContainer,
 ) {
     val polygon = when (protocol) {
         Protocol.VLESS -> MaterialShapes.Cookie4Sided

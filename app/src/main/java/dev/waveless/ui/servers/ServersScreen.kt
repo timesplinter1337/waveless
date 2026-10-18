@@ -71,6 +71,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ClipEntry
@@ -404,8 +405,15 @@ private fun ServerItem(
             ServerBadge(
                 profile.protocol,
                 name.flag,
-                container = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiaryContainer,
-                content = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onTertiaryContainer,
+                // Tint the row's own color instead of using `primary`, which is a light tone
+                // in dark themes and glares around the flag.
+                container = if (selected) {
+                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.16f)
+                        .compositeOver(MaterialTheme.colorScheme.primaryContainer)
+                } else {
+                    MaterialTheme.colorScheme.secondaryContainer
+                },
+                content = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
             )
         },
         supportingContent = {

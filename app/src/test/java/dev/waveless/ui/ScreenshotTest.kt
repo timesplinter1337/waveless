@@ -84,7 +84,13 @@ class ScreenshotTest {
     }
 
     @Test
-    fun servers() = shot("servers") {
+    fun servers() = shot("servers") { ServersSample() }
+
+    @Test
+    fun serversDark() = shot("servers_dark", dark = true) { ServersSample() }
+
+    @Composable
+    private fun ServersSample() {
         ServersScreen(
             store = store,
             delays = mapOf(
