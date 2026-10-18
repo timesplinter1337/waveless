@@ -94,6 +94,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteSubscription(id: String) = viewModelScope.launch { profiles.deleteSubscription(id) }
 
+    fun updateSubscription(id: String) = launchBusy {
+        profiles.updateSubscription(id)
+            .onSuccess { message(str(R.string.msg_subscriptions_updated, it)) }
+            .onFailure { message(str(R.string.msg_subscription_failed, it.message.orEmpty())) }
+    }
+
     fun updateSubscriptions() = launchBusy {
         val results = profiles.updateAllSubscriptions()
         val failed = results.count { it.isFailure }

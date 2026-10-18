@@ -19,6 +19,7 @@
     <string name="action_paste">Import from clipboard</string>
     <string name="action_test_delays">Test latency</string>
     <string name="action_add_subscription">Add subscription</string>
+    <string name="action_update_subscription">Update subscription</string>
     <string name="action_update_subscriptions">Update subscriptions</string>
     <string name="action_delete_subscription">Delete subscription</string>
     <string name="action_import_text">Paste links</string>
@@ -43,6 +44,8 @@
         <item quantity="other">%d servers</item>
     </plurals>
     <string name="group_manual">Added manually</string>
+    <string name="group_updated">Updated %s</string>
+    <string name="group_never_updated">Not updated yet</string>
     <string name="delay_ms">%d ms</string>
     <string name="delay_failed">timeout</string>
     <string name="empty_title">No servers yet</string>

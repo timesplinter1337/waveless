@@ -103,6 +103,7 @@ fun WavelessRoot(viewModel: MainViewModel, onConnectRequest: () -> Unit) {
                     onImport = { viewModel.importText(it) },
                     onAddSubscription = { name, url -> viewModel.addSubscription(name, url) },
                     onDeleteSubscription = { viewModel.deleteSubscription(it) },
+                    onUpdateSubscription = { viewModel.updateSubscription(it) },
                     onUpdateSubscriptions = { viewModel.updateSubscriptions() },
                     onTestDelays = viewModel::testDelays,
                 )

@@ -44,7 +44,9 @@ class ScreenshotTest {
 
     private val store = ProfileStore(
         profiles = profiles,
-        subscriptions = listOf(Subscription("sub", "Provider", "https://example.net/sub")),
+        subscriptions = listOf(
+            Subscription("sub", "Provider", "https://example.net/sub", updatedAt = System.currentTimeMillis() - 25 * 60_000),
+        ),
         selectedId = profiles[0].id,
     )
 
@@ -94,7 +96,7 @@ class ScreenshotTest {
             busy = false,
             snackbar = SnackbarHostState(),
             onSelect = {}, onDelete = {}, onImport = {}, onAddSubscription = { _, _ -> },
-            onDeleteSubscription = {}, onUpdateSubscriptions = {}, onTestDelays = {},
+            onDeleteSubscription = {}, onUpdateSubscription = {}, onUpdateSubscriptions = {}, onTestDelays = {},
         )
     }
 
@@ -102,7 +104,7 @@ class ScreenshotTest {
     fun serversEmptyDark() = shot("servers_empty_dark", dark = true) {
         ServersScreen(
             ProfileStore(), emptyMap(), false, SnackbarHostState(),
-            {}, {}, {}, { _, _ -> }, {}, {}, {},
+            {}, {}, {}, { _, _ -> }, {}, {}, {}, {},
         )
     }
 

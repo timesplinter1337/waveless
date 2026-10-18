@@ -18,6 +18,7 @@
     <string name="action_paste">Импорт из буфера обмена</string>
     <string name="action_test_delays">Проверить задержку</string>
     <string name="action_add_subscription">Добавить подписку</string>
+    <string name="action_update_subscription">Обновить подписку</string>
     <string name="action_update_subscriptions">Обновить подписки</string>
     <string name="action_delete_subscription">Удалить подписку</string>
     <string name="action_import_text">Вставить ссылки</string>
@@ -44,6 +45,8 @@
         <item quantity="other">%d сервера</item>
     </plurals>
     <string name="group_manual">Добавлены вручную</string>
+    <string name="group_updated">Обновлено %s</string>
+    <string name="group_never_updated">Ещё не обновлялась</string>
     <string name="delay_ms">%d мс</string>
     <string name="delay_failed">таймаут</string>
     <string name="empty_title">Серверов пока нет</string>

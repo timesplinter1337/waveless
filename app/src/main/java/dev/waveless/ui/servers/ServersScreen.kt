@@ -1,6 +1,7 @@
 package dev.waveless.ui.servers
 
 import android.content.ClipData
+import android.text.format.DateUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,11 +19,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.EditNote
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.RssFeed
@@ -66,6 +69,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ClipEntry
@@ -98,6 +103,7 @@ fun ServersScreen(
     onImport: (String?) -> Unit,
     onAddSubscription: (name: String, url: String) -> Unit,
     onDeleteSubscription: (String) -> Unit,
+    onUpdateSubscription: (String) -> Unit,
     onUpdateSubscriptions: () -> Unit,
     onTestDelays: () -> Unit,
     modifier: Modifier = Modifier,
@@ -139,6 +145,7 @@ fun ServersScreen(
                 ServerList(
                     store = store,
                     delays = delays,
+                    busy = busy,
                     onSelect = onSelect,
                     onDelete = onDelete,
                     onCopy = { profile ->
@@ -147,6 +154,7 @@ fun ServersScreen(
                         }
                     },
                     onDeleteSubscription = onDeleteSubscription,
+                    onUpdateSubscription = onUpdateSubscription,
                     modifier = Modifier.nestedScroll(toolbarScroll),
                 )
             }
@@ -213,15 +221,26 @@ private fun ToolbarAction(icon: ImageVector, label: String, onClick: () -> Unit)
     }
 }
 
+/** Corner radius of a provider panel; rows inside it use a smaller one so they nest visually. */
+private val PanelCorner = 28.dp
+private val PanelPadding = Spacing.xs
+
+/**
+ * Each provider (subscription, or the manual group) is drawn as one panel: its header and its
+ * servers are separate lazy items that share one container, so the panel stays lazy for big
+ * subscriptions while reading as a single card.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ServerList(
     store: ProfileStore,
     delays: Map<String, Delay>,
+    busy: Boolean,
     onSelect: (Profile) -> Unit,
     onDelete: (Profile) -> Unit,
     onCopy: (Profile) -> Unit,
     onDeleteSubscription: (String) -> Unit,
+    onUpdateSubscription: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val groups: List<Pair<Subscription?, List<Profile>>> = remember(store) {
@@ -230,48 +249,126 @@ private fun ServerList(
         (listOf<Pair<Subscription?, List<Profile>>>(null to manual) + subs).filter { it.second.isNotEmpty() || it.first != null }
     }
     val selectedId = store.selected?.id
+    val panelColor = MaterialTheme.colorScheme.surfaceContainer
+    val topShape = RoundedCornerShape(topStart = PanelCorner, topEnd = PanelCorner)
+    val bottomShape = RoundedCornerShape(bottomStart = PanelCorner, bottomEnd = PanelCorner)
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = Spacing.sm, end = Spacing.sm, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+        contentPadding = PaddingValues(start = Spacing.sm, end = Spacing.sm, top = Spacing.xs, bottom = 120.dp),
     ) {
-        groups.forEach { (subscription, profiles) ->
-            item(key = "header-${subscription?.id ?: "manual"}") {
-                GroupHeader(subscription, onDeleteSubscription)
+        groups.forEachIndexed { groupIndex, (subscription, profiles) ->
+            val groupKey = subscription?.id ?: "manual"
+            item(key = "header-$groupKey") {
+                PanelHeader(
+                    subscription = subscription,
+                    count = profiles.size,
+                    busy = busy,
+                    onUpdate = { subscription?.let { onUpdateSubscription(it.id) } },
+                    onDelete = { subscription?.let { onDeleteSubscription(it.id) } },
+                    modifier = Modifier
+                        .animateItem()
+                        .padding(top = if (groupIndex == 0) 0.dp else Spacing.sm)
+                        .background(panelColor, if (profiles.isEmpty()) RoundedCornerShape(PanelCorner) else topShape),
+                )
             }
             itemsIndexed(profiles, key = { _, p -> p.id }) { index, profile ->
+                val last = index == profiles.lastIndex
                 ServerItem(
                     profile = profile,
                     selected = profile.id == selectedId,
                     delay = delays[profile.id],
-                    index = index,
-                    count = profiles.size,
                     onSelect = { onSelect(profile) },
                     onDelete = { onDelete(profile) },
                     onCopy = { onCopy(profile) },
-                    modifier = Modifier.animateItem(),
+                    modifier = Modifier
+                        .animateItem()
+                        .background(panelColor, if (last) bottomShape else RectangleShape)
+                        .padding(
+                            start = PanelPadding,
+                            end = PanelPadding,
+                            bottom = if (last) PanelPadding else ListItemDefaults.SegmentedGap,
+                        ),
                 )
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun GroupHeader(subscription: Subscription?, onDelete: (String) -> Unit) {
+private fun PanelHeader(
+    subscription: Subscription?,
+    count: Int,
+    busy: Boolean,
+    onUpdate: () -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var menu by remember { mutableStateOf(false) }
+    val servers = pluralStringResource(R.plurals.servers_count, count, count)
+    val updated = when {
+        subscription == null -> null
+        subscription.updatedAt == 0L -> stringResource(R.string.group_never_updated)
+        else -> stringResource(
+            R.string.group_updated,
+            DateUtils.getRelativeTimeSpanString(
+                subscription.updatedAt,
+                System.currentTimeMillis(),
+                DateUtils.MINUTE_IN_MILLIS,
+                DateUtils.FORMAT_ABBREV_RELATIVE,
+            ).toString().replaceFirstChar { it.lowercase() },
+        )
+    }
     Row(
-        Modifier.fillMaxWidth().padding(top = Spacing.sm, bottom = Spacing.xs, start = Spacing.xs),
+        modifier
+            .fillMaxWidth()
+            .padding(start = Spacing.sm, end = Spacing.xxs, top = Spacing.sm, bottom = Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            subscription?.name ?: stringResource(R.string.group_manual),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.weight(1f),
-        )
+        Box(
+            Modifier
+                .size(40.dp)
+                .background(MaterialTheme.colorScheme.secondaryContainer, MaterialShapes.Cookie9Sided.toShape()),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                if (subscription != null) Icons.Rounded.RssFeed else Icons.Rounded.Link,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Column(Modifier.weight(1f).padding(horizontal = Spacing.sm)) {
+            Text(
+                subscription?.name ?: stringResource(R.string.group_manual),
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                listOfNotNull(servers, updated).joinToString(" · "),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         if (subscription != null) {
-            IconButton(onClick = { onDelete(subscription.id) }) {
-                Icon(Icons.Rounded.Delete, stringResource(R.string.action_delete_subscription))
+            IconButton(onClick = onUpdate, enabled = !busy) {
+                Icon(Icons.Rounded.Refresh, stringResource(R.string.action_update_subscription))
+            }
+            Box {
+                IconButton(onClick = { menu = true }) {
+                    Icon(Icons.Rounded.MoreVert, stringResource(R.string.action_more))
+                }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_delete_subscription)) },
+                        leadingIcon = { Icon(Icons.Rounded.Delete, null) },
+                        onClick = { menu = false; onDelete() },
+                    )
+                }
             }
         }
     }
@@ -283,8 +380,6 @@ private fun ServerItem(
     profile: Profile,
     selected: Boolean,
     delay: Delay?,
-    index: Int,
-    count: Int,
     onSelect: () -> Unit,
     onDelete: () -> Unit,
     onCopy: () -> Unit,
@@ -292,13 +387,15 @@ private fun ServerItem(
 ) {
     var menu by remember { mutableStateOf(false) }
     val name = remember(profile.name) { FlagName.of(profile.name) }
+    // Rows sit inside the provider panel, so they are flat until selected instead of
+    // drawing a container of their own.
     SegmentedListItem(
         selected = selected,
         onClick = onSelect,
         onLongClick = { menu = true },
-        shapes = ListItemDefaults.segmentedShapes(index, count),
+        shapes = ListItemDefaults.shapes(shape = RoundedCornerShape(PanelCorner - PanelPadding)),
         colors = ListItemDefaults.segmentedColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = Color.Transparent,
             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
             selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
